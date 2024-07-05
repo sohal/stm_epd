@@ -1,38 +1,42 @@
-cmake_minimum_required(VERSION 3.22)
-
-#
-# This file is generated only once,
-# and is not re-generated if converter is called multiple times.
-#
-# User is free to modify the file as much as necessary
-#
-
-# Setup compiler settings
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS ON)
-
+cmake_minimum_required(VERSION 3.29)
+include(CMakePrintHelpers)
+include(FetchContent)
 
 # Define the build type
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-# Set the project name
-set(CMAKE_PROJECT_NAME stm_epd)
+# Set branch names for the sub modules dependencies
+set(GITHUB_BRANCH_TOOLCHAIN "HEAD" CACHE STRING "git SHA for CMake Toolchain")
+# set the location of all fetched repos
+set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/_deps")
+# show limited messages while cloning git repos
+set(FETCHCONTENT_QUIET ON)
 
-# Include toolchain file
-include("cmake/gcc-arm-none-eabi.cmake")
+cmake_print_variables(GITHUB_BRANCH_TOOLCHAIN)
+FetchContent_Declare(
+    cmake_scripts                             # Recommendation: Stick close to the original name.
+    GIT_REPOSITORY  git@github.com:kodezine/cmake_scripts.git
+    GIT_TAG         ${GITHUB_BRANCH_TOOLCHAIN}
+)
+
+# pre-fetch the toolchain repository as the first job before project configuration
+FetchContent_GetProperties(cmake_scripts)
+
+if(NOT cmake_scripts_POPULATED)
+    FetchContent_MakeAvailable(cmake_scripts)
+endif()
+
+project(
+    f031k6_epd
+    VERSION     1.0.0
+    LANGUAGES   C ASM CXX
+    DESCRIPTION "Hardware Abstraction Layer for STM32CubeXX based project"
+)
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-
-# Enable CMake support for ASM and C languages
-enable_language(C ASM)
-
-# Core project settings
-project(${CMAKE_PROJECT_NAME})
-message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
