@@ -35,38 +35,36 @@ project(
     DESCRIPTION "Hardware Abstraction Layer for STM32CubeXX based project"
 )
 
-# Enable compile command to ease indexing with e.g. clangd
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+    # Include dependencies from repositories ---------------------------------------
+    set(GITHUB_BRANCH_cmsis_v6 "6.1.0")
+    include(${cmake_scripts_SOURCE_DIR}/frameworks/cmsis_v6/cmsis_v6.cmake)
+    #include(${cmake_scripts_SOURCE_DIR}/frameworks/segger_rtt/segger_rtt.cmake)
+    set(GITHUB_BRANCH_cubemx "1.11.5")
+    include(${cmake_scripts_SOURCE_DIR}/silicon/st/cubemx.cmake)
+else()
+    message( STATUS "Compiling for Host system")
+endif()
 
-# Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
-
-# Add STM32CubeMX generated sources
-add_subdirectory(cmake/stm32cubemx)
-
-# Link directories setup
-target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined library search paths
+set(${PROJECT_NAME}_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/main.c
 )
 
-# Add sources to executable
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
+add_executable (${PROJECT_NAME}
+    ${${PROJECT_NAME}_SRCS}
 )
 
-# Add include paths
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined include paths
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        C_STANDARD_REQUIRED 11
+        C_EXTENSIONS OFF
 )
 
-# Add project symbols (macros)
-target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined symbols
+target_link_libraries(${PROJECT_NAME}
+    k_devices
 )
 
-# Add linked libraries
-target_link_libraries(${CMAKE_PROJECT_NAME}
-    stm32cubemx
+set(${PROJECT_NAME}_LLVM_LINKER_SCRIPT "llvm.ld")
+set(${PROJECT_NAME}_LLVM_LINKER_PATH "${CMAKE_SOURCE_DIR}")
 
-    # Add user defined libraries
-)
+setTargetLinkOptions(PROJECT_NAME)
